@@ -1,4 +1,6 @@
 package com.sinka.platform.config;
 
-public class WebMvcConfiguration {
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+public class WebMvcConfiguration implements WebMvcConfigurer {
 }

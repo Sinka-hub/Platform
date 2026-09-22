@@ -1,4 +1,7 @@
 package com.sinka.platform.service.serviceImpl;
 
-public class UserServiceImpl {
+import com.sinka.platform.service.UserService;
+
+public class UserServiceImpl implements UserService {
+
 }
