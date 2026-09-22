@@ -1,20 +1,20 @@
 package com.sinka.platform.controller;
 
 import cn.hutool.jwt.JWT;
+import com.sinka.platform.DTO.LoginRequest;
 import com.sinka.platform.constant.JwtConstant;
 import com.sinka.platform.entity.Result;
 import com.sinka.platform.entity.User;
 import com.sinka.platform.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @RestController
 @RequestMapping("/user")
@@ -24,16 +24,20 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/login")
-    public Result login(@RequestParam String username, @RequestParam String password){
+    public Result login(@Valid @RequestBody LoginRequest loginRequest){
                 //登录逻辑
-                User user = userService.login(username, password);
-
+                User user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+                if (user == null) {
+                    return Result.error("用户名或密码错误");
+                }
+                //jwtToken生成
                 String token = JWT.create()
                         .setKey(JwtConstant.SECRET_KEY.getBytes(StandardCharsets.UTF_8))
                         .setPayload("userId", user.getId().toString())
                         .setPayload("username", user.getUsername())
-                        .setExpiresAt(Date.valueOf(LocalDate.now().plusDays(1)))
+                        .setExpiresAt(Date.from(Instant.now().plusSeconds(JwtConstant.EXPIRE_TIME)))
                         .sign();
-               return Result.success(user);
+
+               return Result.success(token);
     }
 }
