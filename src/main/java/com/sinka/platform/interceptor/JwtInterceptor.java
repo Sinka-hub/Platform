@@ -23,9 +23,9 @@ public class JwtInterceptor implements HandlerInterceptor {
         System.out.println(methodName);
 
         //获取Authorization头
-        String authorization = request.getHeader("Authorization");
+        String authorization = request.getHeader(JwtConstant.HEADER_STRING);
         //判断Authorization头是否存在
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(JwtConstant.TOKEN_PREFIX)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
@@ -46,7 +46,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             }
 
             //验证通过后将用户id储存在ThreadLocal中
-            Long id = Long.valueOf(jwt.getPayload("userId").toString());
+            Long id = Long.valueOf(jwt.getPayload(JwtConstant.User_ID).toString());
             ThreadLocalIdUtil.setUserId(id);
         } catch (RuntimeException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

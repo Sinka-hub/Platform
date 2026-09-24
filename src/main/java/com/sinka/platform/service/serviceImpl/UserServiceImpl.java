@@ -1,5 +1,6 @@
 package com.sinka.platform.service.serviceImpl;
 
+import com.sinka.platform.DTO.RegistRequest;
 import com.sinka.platform.entity.User;
 import com.sinka.platform.mapper.UserMapper;
 import com.sinka.platform.service.UserService;
@@ -22,5 +23,10 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword("********");
         return user;
+    }
+
+    @Override
+    public void regist(RegistRequest registRequest) {
+        userMapper.creatUser(registRequest);
     }
 }
