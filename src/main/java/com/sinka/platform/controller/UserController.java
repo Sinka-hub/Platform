@@ -3,10 +3,12 @@ package com.sinka.platform.controller;
 import cn.hutool.jwt.JWT;
 import com.sinka.platform.DTO.LoginRequest;
 import com.sinka.platform.DTO.RegistRequest;
+import com.sinka.platform.VO.UserProfileVO;
 import com.sinka.platform.constant.JwtConstant;
 import com.sinka.platform.entity.Result;
 import com.sinka.platform.entity.User;
 import com.sinka.platform.service.UserService;
+import com.sinka.platform.utils.ThreadLocalIdUtil;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -57,4 +59,12 @@ public class UserController {
 
         return Result.success(token);
     }
+
+    @GetMapping("/me")
+    public Result<UserProfileVO> getMyProfile() {
+        Long userId = ThreadLocalIdUtil.getUserId();
+        UserProfileVO profile = userService.getCurrentUser(userId);
+        return Result.success(profile);
+    }
+
 }

@@ -9,4 +9,6 @@ public interface UserMapper {
     User selectUserByUsername(String username);
 
     void creatUser(RegistRequest registRequest);
+
+    User selectUserById(Long id);
 }

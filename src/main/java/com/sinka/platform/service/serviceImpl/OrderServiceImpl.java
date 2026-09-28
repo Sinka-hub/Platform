@@ -1,7 +1,9 @@
 package com.sinka.platform.service.serviceImpl;
 
 import com.sinka.platform.service.OrderService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class OrderServiceImpl implements OrderService {
     //创建订单
 

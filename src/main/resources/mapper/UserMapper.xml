@@ -14,5 +14,10 @@
         FROM users
         WHERE username = #{username}
     </select>
+    <select id="selectUserById" resultType="com.sinka.platform.entity.User">
+        SELECT id, username, nickname, avatar_url
+        FROM users
+        WHERE id = #{id}
+    </select>
 
 </mapper>
