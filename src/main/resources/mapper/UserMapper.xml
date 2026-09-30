@@ -4,8 +4,11 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.sinka.platform.mapper.UserMapper">
-    <insert id="creatUser">
-        INSERT into users(username,password,nickname) values (#{username},#{password},#{nickname})
+    <insert id="creatUser"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO users (username, password, nickname)
+        VALUES (#{username}, #{password}, #{nickname})
     </insert>
 
     <select id="selectUserByUsername"

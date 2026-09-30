@@ -9,6 +9,9 @@ import com.sinka.platform.entity.Result;
 import com.sinka.platform.entity.User;
 import com.sinka.platform.service.UserService;
 import com.sinka.platform.utils.ThreadLocalIdUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+@Tag(name = "用户", description = "用户相关接口")
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -26,6 +30,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "用户登录", description = "用户名和密码登录，成功后返回 JWT")
     @PostMapping("/login")
     public Result login(@Valid @RequestBody LoginRequest loginRequest) {
         //登录逻辑
@@ -44,6 +49,7 @@ public class UserController {
         return Result.success(token);
     }
 
+    @Operation(summary = "用户注册", description = "创建用户并返回 JWT")
     @PostMapping("/regist")
     public Result regist(@RequestBody RegistRequest registRequest) {
         userService.regist(registRequest);
@@ -60,6 +66,8 @@ public class UserController {
         return Result.success(token);
     }
 
+    @Operation(summary = "获取当前用户资料", description = "根据登录信息查询当前用户的公开资料")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/me")
     public Result<UserProfileVO> getMyProfile() {
         Long userId = ThreadLocalIdUtil.getUserId();

@@ -5,7 +5,5 @@ public class ProductStatusConstant {
 
     public static final String DRAFT = "DRAFT";
 
-    public static final String REJECTED = "REJECTED";
-
     public static final String OFF_SHELF = "OFF_SHELF";
 }

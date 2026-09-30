@@ -100,6 +100,12 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
             <version>4.7.0</version>
         </dependency>
+<!--        添加swagger依赖 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.1.1</version>
+        </dependency>
 
     </dependencies>
 

@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserMapper {
     User selectUserByUsername(String username);
 
-    void creatUser(RegistRequest registRequest);
+    void creatUser(User user);
 
     User selectUserById(Long id);
 }

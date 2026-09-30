@@ -11,6 +11,10 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new JwtInterceptor())
                 .excludePathPatterns("/user/login")
-                .excludePathPatterns("/user/regist");
+                .excludePathPatterns("/user/regist")
+                // Swagger 页面及其 JS、CSS 等静态资源
+                .excludePathPatterns("/swagger-ui.html", "/swagger-ui/**")
+                // springdoc 生成的接口说明 JSON 和页面配置
+                .excludePathPatterns("/v3/api-docs", "/v3/api-docs/**");
     }
 }
