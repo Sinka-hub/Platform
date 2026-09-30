@@ -15,5 +15,5 @@ public interface CoinWalletMapper {
 
     int addBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
 
-    int subtractBalance(Long buyerId, BigDecimal amount);
+    int subtractBalance(@Param("userId") Long userId, @Param("amount") BigDecimal amount);
 }
