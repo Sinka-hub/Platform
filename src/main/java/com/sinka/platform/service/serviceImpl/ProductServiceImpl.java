@@ -13,6 +13,8 @@ import com.sinka.platform.entity.Product;
 import com.sinka.platform.mapper.ProductMapper;
 import com.sinka.platform.service.ProductService;
 import com.sinka.platform.utils.ThreadLocalIdUtil;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Override
     public PageResultVO<ProductListVO> getProductList(Integer pageNum, Integer pageSize) {
@@ -54,15 +59,19 @@ public class ProductServiceImpl implements ProductService {
 
 
         productMapper.insertProduct(product);
+
+        // 清除这个 ID 可能存在的“商品不存在”缓存
+        String key = RedisConstants.PRODUCT_DETAIL_KEY_PREFIX + product.getId();
+        stringRedisTemplate.delete(key);
     }
 
     @Override
     public ProductDetailVO getProductById(Long id) {
         String key = RedisConstants.PRODUCT_DETAIL_KEY_PREFIX + id;
 
+        // 1. 查询缓存
         String json = stringRedisTemplate.opsForValue().get(key);
 
-        // 命中缓存，包括“不存在”标记
         if (json != null) {
             if (json.isEmpty()) {
                 return null;
@@ -70,29 +79,69 @@ public class ProductServiceImpl implements ProductService {
             return JSONUtil.toBean(json, ProductDetailVO.class);
         }
 
-        ProductDetailVO product =
-                productMapper.selectPublishedProductById(id);
-
-        // 没查到：缓存空标记，2 分钟后过期
-        if (product == null) {
-            stringRedisTemplate.opsForValue().set(
-                    key, "", 2, TimeUnit.MINUTES
-            );
-            return null;
-        }
-
-        // 查到：缓存商品详情
-        // 10～12 分钟，避免大量缓存集中到期
-        Random random = new Random();
-        long ttl = 10 + random.nextInt(3);
-
-        stringRedisTemplate.opsForValue().set(
-                key,
-                JSONUtil.toJsonStr(product),
-                ttl,
-                TimeUnit.MINUTES
+        // 2. 获取该商品的锁对象，此时还未加锁
+        RLock lock = redissonClient.getLock(
+                RedisConstants.PRODUCT_DETAIL_LOCK_PREFIX + id
         );
 
-        return product;
+        boolean acquired = false;
+
+        try {
+            // 3. 最多等待 3 秒获取锁，使用看门狗自动续期
+            acquired = lock.tryLock(3, TimeUnit.SECONDS);
+
+            if (!acquired) {
+                throw new IllegalStateException("商品查询繁忙，请稍后重试");
+            }
+
+            // 4. 拿到锁后再次查询缓存
+            json = stringRedisTemplate.opsForValue().get(key);
+
+            if (json != null) {
+                if (json.isEmpty()) {
+                    return null;
+                }
+                return JSONUtil.toBean(json, ProductDetailVO.class);
+            }
+
+            // 5. 缓存仍不存在，查询数据库
+            ProductDetailVO product =
+                    productMapper.selectPublishedProductById(id);
+
+            // 6. 商品不存在，缓存空字符串 2 分钟
+            if (product == null) {
+                stringRedisTemplate.opsForValue().set(
+                        key,
+                        "",
+                        2,
+                        TimeUnit.MINUTES
+                );
+                return null;
+            }
+
+            // 7. 商品存在，缓存 10～12 分钟
+            Random random = new Random();
+            long ttl = 10 + random.nextInt(3);
+
+            stringRedisTemplate.opsForValue().set(
+                    key,
+                    JSONUtil.toJsonStr(product),
+                    ttl,
+                    TimeUnit.MINUTES
+            );
+
+            return product;
+
+        } catch (InterruptedException e) {
+            // 等待锁被中断：恢复中断标记，并结束查询
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("商品查询被中断", e);
+
+        } finally {
+            // 即使中途 return 或抛异常，也会执行这里
+            if (acquired && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 }
