@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sinka.platform.mapper.OrderMapper">
+
+
+    <insert id="insertOrder"
+            parameterType="com.sinka.platform.entity.Order"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="id">
+        INSERT INTO orders (
+            order_no,
+            product_id,
+            orderer_id,
+            publisher_id,
+            product_title_snapshot,
+            unit_price_snapshot,
+            order_status,
+            payment_status,
+            quantity,
+            total_amount
+        )
+        VALUES (
+                   #{orderNo},
+                   #{productId},
+                   #{ordererId},
+                   #{publisherId},
+                   #{productTitleSnapshot},
+                   #{unitPriceSnapshot},
+                   #{orderStatus},
+                   #{paymentStatus},
+                   #{quantity},
+                   #{totalAmount}
+               )
+    </insert>
+
+    <update id="payOrder">
+        UPDATE orders
+        SET payment_status = 'PAID',
+            order_status = 'WAITING_ACCEPTANCE',
+            paid_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND orderer_id = #{buyerId}
+          AND order_status = 'WAITING_PAYMENT'
+          AND payment_status = 'UNPAID'
+    </update>
+
+    <update id="acceptOrder">
+        UPDATE orders
+        SET order_status = 'IN_PROGRESS',
+            accepted_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND publisher_id = #{publisherId}
+          AND order_status = 'WAITING_ACCEPTANCE'
+          AND payment_status = 'PAID'
+    </update>
+
+    <update id="submitOrder">
+        UPDATE orders
+        SET order_status = 'WAITING_CONFIRMATION',
+            submitted_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND publisher_id = #{publisherId}
+          AND order_status = 'IN_PROGRESS'
+    </update>
+
+    <update id="confirmOrder">
+        UPDATE orders
+        SET order_status = 'COMPLETED',
+            confirmed_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND orderer_id = #{buyerId}
+          AND order_status = 'WAITING_CONFIRMATION'
+    </update>
+    <update id="cancelOrder">
+        UPDATE orders
+        SET order_status = 'CANCELLED',
+            payment_status = 'REFUNDED',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND orderer_id = #{buyerId}
+          AND order_status = 'WAITING_ACCEPTANCE'
+          AND payment_status = 'PAID'
+    </update>
+
+    <select id="selectMyOrders"
+            resultType="com.sinka.platform.VO.OrderListVO">
+        SELECT
+            id,
+            order_no,
+            product_id,
+            orderer_id,
+            publisher_id,
+            product_title_snapshot,
+            unit_price_snapshot,
+            quantity,
+            total_amount,
+            order_status,
+            payment_status,
+            created_at
+        FROM orders
+        WHERE orderer_id = #{userId}
+           OR publisher_id = #{userId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="selectOrderDetailById"
+            resultType="com.sinka.platform.VO.OrderDetailVO">
+        SELECT
+            id,
+            order_no,
+            product_id,
+            orderer_id,
+            publisher_id,
+            product_title_snapshot,
+            unit_price_snapshot,
+            quantity,
+            total_amount,
+            order_status,
+            payment_status,
+            created_at,
+            paid_at,
+            accepted_at,
+            submitted_at,
+            confirmed_at,
+            updated_at
+        FROM orders
+        WHERE id = #{id}
+          AND (
+            orderer_id = #{userId}
+                OR publisher_id = #{userId}
+            )
+    </select>
+    <select id="selectOrderForUpdate"
+            resultType="com.sinka.platform.entity.Order">
+        SELECT id, orderer_id, publisher_id,
+               total_amount, order_status, payment_status
+        FROM orders
+        WHERE id = #{id}
+            FOR UPDATE
+    </select>
+</mapper>

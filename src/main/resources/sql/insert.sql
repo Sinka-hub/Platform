@@ -55,3 +55,7 @@ INSERT INTO `orders` (
              'UNPAID',
              '88.00'
          );
+
+INSERT INTO coin_wallets (user_id)
+SELECT id
+FROM users;

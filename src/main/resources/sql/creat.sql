@@ -56,4 +56,30 @@ create table users
         unique (username)
 )
     comment '用户表';
+CREATE TABLE coin_wallets (
+                              id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '钱包ID',
+                              user_id    BIGINT UNSIGNED NOT NULL COMMENT '用户ID，对应users.id',
+                              balance    DECIMAL(18, 2) NOT NULL DEFAULT 0.00 COMMENT '可用金币余额',
+                              created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
+                              PRIMARY KEY (id),
+                              UNIQUE KEY uk_coin_wallets_user_id (user_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '用户金币钱包';
+
+
+CREATE TABLE coin_transactions (
+                                   id            BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '流水ID',
+                                   user_id       BIGINT UNSIGNED NOT NULL COMMENT '余额发生变动的用户ID',
+                                   order_id      BIGINT UNSIGNED NULL COMMENT '关联订单ID，充值时为空',
+                                   type          VARCHAR(30) NOT NULL COMMENT '流水类型：RECHARGE充值、ORDER_PAY支付、ORDER_REFUND退款、ORDER_SETTLE结算',
+                                   change_amount DECIMAL(18, 2) NOT NULL COMMENT '金币变动金额，收入为正，支出为负',
+                                   biz_no        VARCHAR(100) NOT NULL COMMENT '业务编号，用于防止重复记账',
+                                   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+                                   PRIMARY KEY (id),
+                                   UNIQUE KEY uk_coin_transactions_biz_no (biz_no),
+                                   KEY idx_coin_transactions_user_id_id (user_id, id),
+                                   KEY idx_coin_transactions_order_id (order_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '金币变动流水';

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sinka.platform.mapper.ProductMapper">
+
+    <resultMap id="productListVOMap" type="com.sinka.platform.VO.ProductListVO">
+        <id property="id" column="id"/>
+        <result property="publisherId" column="publisher_id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="price" column="price"/>
+    </resultMap>
+    <insert id="insertProduct"
+            parameterType="com.sinka.platform.entity.Product"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO products (
+            publisher_id,
+            product_type,
+            title,
+            description,
+            price,
+            product_status
+        )
+        VALUES (
+                   #{publisherId},
+                   #{productType},
+                   #{title},
+                   #{description},
+                   #{price},
+                   #{productStatus}
+               )
+    </insert>
+
+    <select id="selectActiveProducts" resultMap="productListVOMap">
+        SELECT id, publisher_id, title, description, price
+        FROM products
+        WHERE product_status = 'PUBLISHED'
+        ORDER BY id DESC
+    </select>
+
+    <select id="selectPublishedProductById"
+            resultType="com.sinka.platform.VO.ProductDetailVO">
+        SELECT id, publisher_id, product_type, title, description, price
+        FROM products
+        WHERE id = #{id}
+        AND product_status = 'PUBLISHED'
+    </select>
+
+</mapper>
