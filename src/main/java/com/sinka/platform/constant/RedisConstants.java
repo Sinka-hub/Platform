@@ -9,4 +9,5 @@ public final class RedisConstants {
 
     public static final String PRODUCT_DETAIL_LOCK_PREFIX =
             "lock:product:detail:";
+
 }

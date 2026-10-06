@@ -23,4 +23,8 @@ public interface OrderService {
     boolean confirmOrder(Long id);
 
     boolean cancelOrder(Long id);
+
+    void closeTimeoutOrder(Long aLong);
+
+    int closeExpiredUnpaidOrders();
 }

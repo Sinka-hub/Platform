@@ -28,4 +28,8 @@ public interface OrderMapper {
     Order selectOrderForUpdate(Long id);
 
     int cancelOrder(Long id, Long buyerId);
+
+    int closeTimeoutOrder(Long id);
+
+    int closeExpiredUnpaidOrders();
 }
