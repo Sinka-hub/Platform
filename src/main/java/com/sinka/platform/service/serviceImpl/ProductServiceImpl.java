@@ -188,6 +188,7 @@ public class ProductServiceImpl implements ProductService {
             }
         }
     }
+
     private final Object fallbackRateLock = new Object();
 
     private long fallbackWindowStart = System.nanoTime();

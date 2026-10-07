@@ -3,6 +3,7 @@ package com.sinka.platform.config;
 import com.sinka.platform.interceptor.JwtInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfiguration implements WebMvcConfigurer {
@@ -16,5 +17,12 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                 .excludePathPatterns("/swagger-ui.html", "/swagger-ui/**")
                 // springdoc 生成的接口说明 JSON 和页面配置
                 .excludePathPatterns("/v3/api-docs", "/v3/api-docs/**");
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        WebMvcConfigurer.super.addResourceHandlers(registry);
+        registry.addResourceHandler("/media/videos/**")
+                .addResourceLocations("file:D:/platform-media/videos/");
     }
 }
