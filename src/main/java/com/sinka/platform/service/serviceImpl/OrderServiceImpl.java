@@ -98,6 +98,19 @@ public class OrderServiceImpl implements OrderService {
                 cd
         );
 
+        // 提醒发送失败不影响已经创建的订单，关闭订单链路保持原样。
+        try {
+            CorrelationData reminder = new CorrelationData();
+            reminder.getFuture().whenComplete((confirm, ex) -> {
+                if (ex != null || !confirm.ack()) {
+                    log.warn("订单提醒发布未确认，订单ID：{}", order.getId(), ex);
+                }
+            });
+            rabbitTemplate.convertAndSend(RabbitConstants.ORDER_DELAY_EXCHANGE,
+                    RabbitConstants.ORDER_REMIND_DELAY_KEY, String.valueOf(order.getId()), reminder);
+        } catch (RuntimeException e) {
+            log.warn("订单提醒发送失败，订单ID：{}", order.getId(), e);
+        }
         return new OrderCreateVO(order.getId(), order.getOrderNo());
     }
 

@@ -17,8 +17,8 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: guest
-    password: guest
+    username: paltform
+    password: 326944
     virtual-host: /
     listener:
       simple:
@@ -40,3 +40,6 @@ mybatis:
   type-aliases-package: com.sinka.platform.entity
   configuration:
     map-underscore-to-camel-case: true
+logging:
+  level:
+    com.sinka.platform.mapper: DEBUG

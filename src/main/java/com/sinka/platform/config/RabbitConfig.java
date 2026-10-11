@@ -10,6 +10,20 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitConfig {
+    @Bean
+    public Queue orderRemindDelayQueue() {
+        return QueueBuilder.durable(RabbitConstants.ORDER_REMIND_DELAY_QUEUE)
+                .ttl(RabbitConstants.ORDER_REMIND_MILLIS)
+                .deadLetterExchange(RabbitConstants.ORDER_REMIND_EXCHANGE)
+                .deadLetterRoutingKey(RabbitConstants.ORDER_REMIND_KEY).build();
+    }
+
+    @Bean
+    public Binding orderRemindDelayBinding() {
+        return BindingBuilder.bind(orderRemindDelayQueue()).to(orderDelayExchange())
+                .with(RabbitConstants.ORDER_REMIND_DELAY_KEY);
+    }
+
 
     @Bean
     public DirectExchange orderDelayExchange() {

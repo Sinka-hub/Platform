@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:mysql://platform-mysql:3306/platformdb?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8
+    username: platform
+    password: ${MYSQL_PASSWORD}
+
+  data:
+    redis:
+      host: platform-redis
+      password: ${REDIS_PASSWORD}
+
+  rabbitmq:
+    host: platform-rabbitmq
+    username: platform
+    password: ${RABBITMQ_PASSWORD}

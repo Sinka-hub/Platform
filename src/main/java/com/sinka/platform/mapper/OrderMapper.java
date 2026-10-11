@@ -10,6 +10,7 @@ import java.util.List;
 
 @Mapper
 public interface OrderMapper {
+    Order selectUnpaidOrderForReminder(Long id);
 
     int insertOrder(Order order);
 
