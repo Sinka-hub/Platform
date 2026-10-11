@@ -1,6 +1,7 @@
 package com.sinka.platform.config;
 
 import com.sinka.platform.interceptor.JwtInterceptor;
+import com.sinka.platform.interceptor.RateLimitInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -8,6 +9,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfiguration implements WebMvcConfigurer {
 
+    private final RateLimitInterceptor rateLimitInterceptor;
+
+    public WebMvcConfiguration(RateLimitInterceptor rateLimitInterceptor) {
+        this.rateLimitInterceptor = rateLimitInterceptor;
+    }
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new JwtInterceptor())
@@ -16,7 +22,11 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
                 // Swagger 页面及其 JS、CSS 等静态资源
                 .excludePathPatterns("/swagger-ui.html", "/swagger-ui/**")
                 // springdoc 生成的接口说明 JSON 和页面配置
-                .excludePathPatterns("/v3/api-docs", "/v3/api-docs/**");
+                .excludePathPatterns("/v3/api-docs", "/v3/api-docs/**")
+                .order(0);
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/orders", "/wallet/recharge")
+                .order(1);
     }
 
     @Override

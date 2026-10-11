@@ -17,8 +17,8 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: paltform
-    password: 326944
+    username: guest
+    password: guest
     virtual-host: /
     listener:
       simple:
