@@ -7,6 +7,7 @@ import com.sinka.platform.DTO.ProductCreateRequest;
 import com.sinka.platform.VO.PageResultVO;
 import com.sinka.platform.VO.ProductDetailVO;
 import com.sinka.platform.VO.ProductListVO;
+import com.sinka.platform.annotation.LogExecutionTime;
 import com.sinka.platform.constant.ProductStatusConstant;
 import com.sinka.platform.constant.RedisConstants;
 import com.sinka.platform.entity.Product;
@@ -40,6 +41,7 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @LogExecutionTime
     @Override
     public PageResultVO<ProductListVO> getProductList(Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
@@ -188,6 +190,7 @@ public class ProductServiceImpl implements ProductService {
             }
         }
     }
+
     private final Object fallbackRateLock = new Object();
 
     private long fallbackWindowStart = System.nanoTime();

@@ -10,6 +10,7 @@ import java.util.List;
 
 @Mapper
 public interface OrderMapper {
+    Order selectUnpaidOrderForReminder(Long id);
 
     int insertOrder(Order order);
 
@@ -28,4 +29,8 @@ public interface OrderMapper {
     Order selectOrderForUpdate(Long id);
 
     int cancelOrder(Long id, Long buyerId);
+
+    int closeTimeoutOrder(Long id);
+
+    int closeExpiredUnpaidOrders();
 }

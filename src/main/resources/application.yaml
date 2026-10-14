@@ -24,11 +24,22 @@ spring:
       simple:
         acknowledge-mode: auto
         prefetch: 1
-    publisher-confirm-type: none
-    publisher-returns: false
+        retry:
+          enabled: true
+          initial-interval: 1s
+          multiplier: 2
+          max-interval: 10s
+          max-retries: 2
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.sinka.platform.entity
   configuration:
     map-underscore-to-camel-case: true
+logging:
+  level:
+    com.sinka.platform.mapper: DEBUG

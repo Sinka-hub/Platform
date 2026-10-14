@@ -59,3 +59,9 @@ INSERT INTO `orders` (
 INSERT INTO coin_wallets (user_id)
 SELECT id
 FROM users;
+EXPLAIN
+SELECT id, publisher_id, title, description, price
+FROM products
+WHERE product_status = 'PUBLISHED'
+ORDER BY id DESC
+LIMIT 0, 6;

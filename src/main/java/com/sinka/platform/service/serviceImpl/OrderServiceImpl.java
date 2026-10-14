@@ -6,6 +6,7 @@ import com.sinka.platform.DTO.OrderCreateRequest;
 import com.sinka.platform.VO.*;
 import com.sinka.platform.constant.OrderStatusConstant;
 import com.sinka.platform.constant.PaymentStatusConstant;
+import com.sinka.platform.constant.RabbitConstants;
 import com.sinka.platform.entity.Order;
 import com.sinka.platform.mapper.CoinTransactionMapper;
 import com.sinka.platform.mapper.CoinWalletMapper;
@@ -14,12 +15,16 @@ import com.sinka.platform.mapper.ProductMapper;
 import com.sinka.platform.service.OrderService;
 import com.sinka.platform.utils.RedisIdWorker;
 import com.sinka.platform.utils.ThreadLocalIdUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -37,6 +42,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private CoinTransactionMapper coinTransactionMapper;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public OrderCreateVO createOrder(OrderCreateRequest request) {
@@ -64,6 +72,45 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.insertOrder(order);
 
+        // 发送数据库主键，消息内容使用字符串
+        CorrelationData cd = new CorrelationData();
+
+        cd.getFuture().whenComplete((confirm, ex) -> {
+            if (ex != null) {
+                log.error("获取发布确认异常，消息ID：{}，订单ID：{}",
+                        cd.getId(), order.getId(), ex);
+                return;
+            }
+
+            if (confirm.ack()) {
+                log.info("收到发布ACK，消息ID：{}，订单ID：{}",
+                        cd.getId(), order.getId());
+            } else {
+                log.error("收到发布NACK，消息ID：{}，订单ID：{}，原因：{}",
+                        cd.getId(), order.getId(), confirm.reason());
+            }
+        });
+
+        rabbitTemplate.convertAndSend(
+                RabbitConstants.ORDER_DELAY_EXCHANGE,
+                RabbitConstants.ORDER_DELAY_ROUTING_KEY,
+                String.valueOf(order.getId()),
+                cd
+        );
+
+        // 提醒发送失败不影响已经创建的订单，关闭订单链路保持原样。
+        try {
+            CorrelationData reminder = new CorrelationData();
+            reminder.getFuture().whenComplete((confirm, ex) -> {
+                if (ex != null || !confirm.ack()) {
+                    log.warn("订单提醒发布未确认，订单ID：{}", order.getId(), ex);
+                }
+            });
+            rabbitTemplate.convertAndSend(RabbitConstants.ORDER_DELAY_EXCHANGE,
+                    RabbitConstants.ORDER_REMIND_DELAY_KEY, String.valueOf(order.getId()), reminder);
+        } catch (RuntimeException e) {
+            log.warn("订单提醒发送失败，订单ID：{}", order.getId(), e);
+        }
         return new OrderCreateVO(order.getId(), order.getOrderNo());
     }
 
@@ -209,5 +256,21 @@ public class OrderServiceImpl implements OrderService {
         return true;
     }
 
+    //使用mq取消超时订单
+    @Override
+    public void closeTimeoutOrder(Long id) {
+
+        int rows = orderMapper.closeTimeoutOrder(id);
+
+        if (rows == 0) {
+            // 已支付、已取消或不存在：无需处理
+            return;
+        }
+    }
+
+    @Override
+    public int closeExpiredUnpaidOrders() {
+        return orderMapper.closeExpiredUnpaidOrders();
+    }
 
 }
